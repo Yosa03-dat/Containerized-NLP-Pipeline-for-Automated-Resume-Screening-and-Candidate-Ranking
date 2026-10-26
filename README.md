@@ -253,7 +253,7 @@ The notebook is pre-executed with all statistical summaries, anomaly diagnostics
 - [x] **Phase 1: Raw Data Exploration & Diagnostic Audit**
 - [x] **Phase 2: Text Preprocessing, Ligature Fixing & Semantic Chunking Notebook**
 - [x] **Phase 3: Repository Documentation & Architecture Spec (`README.md`)**
-- [ ] **Phase 4: Parsing Layer (`src/parser.py`)** — PDF text extraction (PyPDF/pdfplumber) and spaCy NER candidate contact/skills extraction.
+- [x] **Phase 4: Parsing Layer (`src/parser.py`)** — PDF text extraction (PyPDF/pdfplumber) and spaCy NER candidate contact/skills extraction.
 - [ ] **Phase 5: Embedding & Vector Search Engine (`src/embedder.py`)** — Sentence-Transformers (`all-MiniLM-L6-v2`) vector store setup with ChromaDB.
 - [ ] **Phase 6: Skill Gap Matcher & Scoring Algorithm (`src/matcher.py`)** — Cosine similarity computation combined with weighted keyword overlap.
 - [ ] **Phase 7: SQLite Database Layer (`src/database.py`)** — Search logging, candidate ranking history, and session management.
