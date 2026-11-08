@@ -237,25 +237,59 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Running the Preprocessing Notebook
-Launch JupyterLab or VS Code to explore and execute the step-by-step pipeline:
+### 4. Running the Interactive Streamlit Application
+Launch the multi-page Streamlit dashboard locally:
 
 ```bash
-jupyter lab notebooks/01_data_preprocessing.ipynb
+streamlit run app.py
 ```
+Open your browser to `http://localhost:8501` to access the Match Dashboard, Batch Ranking, History Audit, and System Explorer.
 
-The notebook is pre-executed with all statistical summaries, anomaly diagnostics, and Matplotlib/Seaborn visualization plots embedded.
+### 5. Running the Automated Test Suite
+Execute the full test suite across document parsing, dense embeddings, skill gap matching, and SQLite persistence:
+
+```bash
+python -m unittest discover tests
+```
 
 ---
 
-## 🗺️ Next Steps in the Implementation Roadmap
+## 🐳 Docker & Containerized Deployment
 
-- [x] **Phase 1: Raw Data Exploration & Diagnostic Audit**
-- [x] **Phase 2: Text Preprocessing, Ligature Fixing & Semantic Chunking Notebook**
-- [x] **Phase 3: Repository Documentation & Architecture Spec (`README.md`)**
-- [x] **Phase 4: Parsing Layer (`src/parser.py`)** — PDF text extraction (PyPDF/pdfplumber) and spaCy NER candidate contact/skills extraction.
-- [ ] **Phase 5: Embedding & Vector Search Engine (`src/embedder.py`)** — Sentence-Transformers (`all-MiniLM-L6-v2`) vector store setup with ChromaDB.
-- [ ] **Phase 6: Skill Gap Matcher & Scoring Algorithm (`src/matcher.py`)** — Cosine similarity computation combined with weighted keyword overlap.
-- [ ] **Phase 7: SQLite Database Layer (`src/database.py`)** — Search logging, candidate ranking history, and session management.
-- [ ] **Phase 8: Multi-Page Streamlit Dashboard (`app.py`)** — Single resume evaluation and batch candidate ranking interfaces.
-- [ ] **Phase 9: Docker Containerization (`Dockerfile`, `docker-compose.yml`)** — Multi-stage slim container build with persistent volume mounts.
+The application is containerized using a multi-stage `Dockerfile` (Python 3.10 slim) with pre-cached embedding weights and non-root execution permissions.
+
+### Option A: Running with Docker Compose (Recommended)
+Spin up the service with volume mounting and automated healthchecks:
+
+```bash
+# Build and launch container in background
+docker compose up --build -d
+
+# Check service logs
+docker compose logs -f
+
+# Verify container health status
+docker compose ps
+
+# Shut down service
+docker compose down
+```
+
+The Streamlit dashboard will be live at `http://localhost:8501`.
+
+### Option B: Running with Standalone Docker CLI
+
+```bash
+# Build production image
+docker build -t resume-matcher:latest .
+
+# Run container with volume persistence
+docker run -d \
+  --name resume-matcher-app \
+  -p 8501:8501 \
+  -v "${PWD}/data:/app/data" \
+  -v "${PWD}/models:/app/models" \
+  -v "${PWD}/history.db:/app/history.db" \
+  resume-matcher:latest
+```
+

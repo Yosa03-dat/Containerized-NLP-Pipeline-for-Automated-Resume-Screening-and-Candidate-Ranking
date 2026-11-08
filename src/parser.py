@@ -901,12 +901,26 @@ def parse_resume(
         - 'char_count': Total character count of cleaned text
     """
     # 1. Determine input type and extract raw text
-    if isinstance(source, str) and not source.lower().endswith(".pdf") and "\n" in source:
-        # Direct raw text provided
-        raw_text = source
-    else:
+    is_pdf = False
+    if isinstance(source, (io.BytesIO, bytes, Path)):
+        is_pdf = True
+    elif isinstance(source, str):
+        if source.lower().strip().endswith(".pdf"):
+            is_pdf = True
+        else:
+            try:
+                if len(source) < 260 and Path(source).is_file():
+                    is_pdf = True
+            except Exception:
+                is_pdf = False
+
+    if is_pdf:
         # PDF document provided
         raw_text = extract_text_from_pdf(source, method="auto")
+    else:
+        # Direct raw text provided
+        raw_text = str(source)
+
 
     # 2. Standardize and clean text
     cleaned = clean_text(raw_text, remove_bullets=True, preserve_case=True)
