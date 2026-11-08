@@ -37,6 +37,29 @@ from src.embedder import (
     index_job_descriptions_csv,
 )
 
+from src.matcher import (
+    analyze_skill_gap,
+    compute_match_score,
+    evaluate_resume_against_job,
+    rank_candidates_batch,
+    DEFAULT_SEMANTIC_WEIGHT,
+    DEFAULT_SKILL_WEIGHT,
+)
+
+from src.database import (
+    init_db,
+    save_match_result,
+    get_match_history,
+    get_match_by_id,
+    delete_match_record,
+    clear_match_history,
+    save_batch_session,
+    get_batch_sessions,
+    get_batch_candidates,
+    get_database_stats,
+    DEFAULT_DB_FILE,
+)
+
 __all__ = [
     # Parser module
     "extract_text_from_pdf",
@@ -68,4 +91,24 @@ __all__ = [
     "ChromaVectorStore",
     "index_semantic_chunks_csv",
     "index_job_descriptions_csv",
+    # Matcher module
+    "analyze_skill_gap",
+    "compute_match_score",
+    "evaluate_resume_against_job",
+    "rank_candidates_batch",
+    "DEFAULT_SEMANTIC_WEIGHT",
+    "DEFAULT_SKILL_WEIGHT",
+    # Database module
+    "init_db",
+    "save_match_result",
+    "get_match_history",
+    "get_match_by_id",
+    "delete_match_record",
+    "clear_match_history",
+    "save_batch_session",
+    "get_batch_sessions",
+    "get_batch_candidates",
+    "get_database_stats",
+    "DEFAULT_DB_FILE",
 ]
+
