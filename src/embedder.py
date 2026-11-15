@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Default model configuration
 DEFAULT_MODEL_NAME = "all-MiniLM-L6-v2"
 EMBEDDING_DIM = 384
-DEFAULT_CHROMA_DIR = "models/chroma_db"
+DEFAULT_CHROMA_DIR = os.getenv("CHROMA_PERSIST_DIR", "models/chroma_db")
 
 # ---------------------------------------------------------------------------
 # Optional Library Ingestion (Graceful Fallback)

@@ -259,20 +259,27 @@ python -m unittest discover tests
 The application is containerized using a multi-stage `Dockerfile` (Python 3.10 slim) with pre-cached embedding weights and non-root execution permissions.
 
 ### Option A: Running with Docker Compose (Recommended)
-Spin up the service with volume mounting and automated healthchecks:
+Spin up the service with volume mounting and automated healthchecks (CPU execution by default):
 
 ```bash
-# Build and launch container in background
+# Ensure Docker Desktop is running, then build and launch container
 docker compose up --build -d
 
 # Check service logs
 docker compose logs -f
 
-# Verify container health status
+# Verify container health status (healthcheck passes via Python HTTP probe)
 docker compose ps
 
 # Shut down service
 docker compose down
+```
+
+#### Optional: GPU Acceleration (NVIDIA)
+If your host has an NVIDIA GPU and NVIDIA Container Toolkit installed, run with the GPU overlay:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build -d
 ```
 
 The Streamlit dashboard will be live at `http://localhost:8501`.

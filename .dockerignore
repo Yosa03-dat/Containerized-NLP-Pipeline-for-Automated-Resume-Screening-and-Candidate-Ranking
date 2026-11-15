@@ -1,0 +1,39 @@
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git & Repository metadata
+.git/
+.gitignore
+.gitattributes
+
+# Jupyter Notebook checkpoints
+notebooks/.ipynb_checkpoints/
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Local SQLite databases & temporary data
+history.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# CI & Editor files
+.vscode/
+.idea/
+.cursor/

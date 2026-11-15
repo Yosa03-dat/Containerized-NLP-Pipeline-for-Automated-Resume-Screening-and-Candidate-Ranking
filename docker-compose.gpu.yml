@@ -1,0 +1,11 @@
+# Docker Compose GPU Override Configuration
+# Usage: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+services:
+  resume-matcher:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
