@@ -13,8 +13,14 @@ Features:
   - Fully mobile-responsive layouts (KPI grids, score cards, banners, charts).
 """
 
-import io
+# Disable slow telemetry / network handshakes across libraries before importing them
 import os
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+os.environ["CHROMA_TELEMETRY"] = "False"
+os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+import io
 import json
 import logging
 from pathlib import Path
@@ -106,6 +112,12 @@ def load_model():
     except Exception as e:
         logger.error("Failed to load embedding model: %s", e)
         return None
+
+
+@st.cache_data(ttl=5)
+def get_cached_database_stats() -> Dict[str, Any]:
+    """Cached stats fetcher to avoid repeated disk reads during frequent UI redraws."""
+    return get_database_stats()
 
 
 # ---------------------------------------------------------------------------
@@ -234,7 +246,7 @@ with st.sidebar:
     st.caption(f"Keyword Coverage weight: **{skill_weight:.2f}**")
 
     st.markdown("<hr style='margin:16px 0;'>", unsafe_allow_html=True)
-    stats = get_database_stats()
+    stats = get_cached_database_stats()
     st.markdown(f"""
     <div class="stat-pill">
       <div class="sp-row">
@@ -1409,7 +1421,7 @@ elif page == "📜  Audit History":
     </div>
     """, unsafe_allow_html=True)
 
-    db_stats = get_database_stats()
+    db_stats = get_cached_database_stats()
     tier_counts = db_stats.get("tier_counts", {})
 
     st.markdown(f"""

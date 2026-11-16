@@ -38,14 +38,24 @@ except ImportError:
         PdfReader = None
 
 # ---------------------------------------------------------------------------
-# Optional spaCy Library (Graceful Fallback)
+# Optional spaCy Library (Lazy-Loaded Graceful Fallback)
 # ---------------------------------------------------------------------------
-try:
-    import spacy
-    from spacy.language import Language
-except ImportError:
-    spacy = None
-    Language = None
+spacy = None
+Language = None
+
+def _ensure_spacy():
+    """Lazily import spacy to accelerate application startup."""
+    global spacy, Language
+    if spacy is None:
+        try:
+            import spacy as _sp
+            from spacy.language import Language as _Language
+            spacy = _sp
+            Language = _Language
+        except ImportError:
+            spacy = False
+            Language = None
+    return spacy if spacy is not False else None
 
 
 # ---------------------------------------------------------------------------
@@ -484,7 +494,8 @@ def get_spacy_nlp(
     Returns:
         Loaded spaCy Language pipeline, or None if spaCy is not installed.
     """
-    if spacy is None:
+    sp_mod = _ensure_spacy()
+    if sp_mod is None:
         logger.warning("spaCy is not installed. NLP entity extraction will use regex-only fallback.")
         return None
 
@@ -495,12 +506,12 @@ def get_spacy_nlp(
     nlp = None
     # 1. Try loading specified pre-trained model
     try:
-        nlp = spacy.load(model_name)
+        nlp = sp_mod.load(model_name)
         logger.info("Loaded pre-trained spaCy model '%s'", model_name)
     except Exception as e:
         logger.info("Model '%s' not found (%s). Falling back to spacy.blank('en').", model_name, str(e))
         try:
-            nlp = spacy.blank("en")
+            nlp = sp_mod.blank("en")
             # Add sentencizer to blank pipeline for sentence segmentation
             if "sentencizer" not in nlp.pipe_names:
                 nlp.add_pipe("sentencizer")

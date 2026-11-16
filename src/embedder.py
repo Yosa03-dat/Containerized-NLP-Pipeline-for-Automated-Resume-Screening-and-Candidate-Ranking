@@ -24,24 +24,50 @@ EMBEDDING_DIM = 384
 DEFAULT_CHROMA_DIR = os.getenv("CHROMA_PERSIST_DIR", "models/chroma_db")
 
 # ---------------------------------------------------------------------------
-# Optional Library Ingestion (Graceful Fallback)
+# Lazy Library Ingestion (Blazing-Fast Cold Start & Web App Startup)
 # ---------------------------------------------------------------------------
-try:
-    import torch
-except ImportError:
-    torch = None
+torch = None
+SentenceTransformer = None
+chromadb = None
+Settings = None
+_CACHED_DEVICE: Optional[str] = None
 
-try:
-    from sentence_transformers import SentenceTransformer
-except ImportError:
-    SentenceTransformer = None
 
-try:
-    import chromadb
-    from chromadb.config import Settings
-except ImportError:
-    chromadb = None
-    Settings = None
+def _ensure_torch() -> Any:
+    global torch
+    if torch is None:
+        try:
+            import torch as _torch
+            torch = _torch
+        except ImportError:
+            torch = None
+    return torch
+
+
+def _ensure_sentence_transformers() -> Any:
+    global SentenceTransformer
+    if SentenceTransformer is None:
+        try:
+            from sentence_transformers import SentenceTransformer as _ST
+            SentenceTransformer = _ST
+        except ImportError:
+            SentenceTransformer = None
+    return SentenceTransformer
+
+
+def _ensure_chromadb() -> Any:
+    global chromadb, Settings
+    if chromadb is None:
+        try:
+            import chromadb as _chromadb
+            from chromadb.config import Settings as _Settings
+            chromadb = _chromadb
+            Settings = _Settings
+        except ImportError:
+            chromadb = None
+            Settings = None
+    return chromadb
+
 
 # Global model cache (singleton pattern)
 _MODEL_CACHE: Dict[str, Any] = {}
@@ -54,15 +80,23 @@ _MODEL_CACHE: Dict[str, Any] = {}
 def get_optimal_device() -> str:
     """
     Determines the fastest available compute device (CUDA GPU, Apple MPS, or CPU).
+    Caches the detected device to avoid expensive hardware polling on web reruns.
 
     Returns:
         Device identifier string: 'cuda', 'mps', or 'cpu'.
     """
-    if torch is not None and torch.cuda.is_available():
-        return "cuda"
-    if torch is not None and hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-        return "mps"
-    return "cpu"
+    global _CACHED_DEVICE
+    if _CACHED_DEVICE is not None:
+        return _CACHED_DEVICE
+
+    t = _ensure_torch()
+    if t is not None and t.cuda.is_available():
+        _CACHED_DEVICE = "cuda"
+    elif t is not None and hasattr(t.backends, "mps") and t.backends.mps.is_available():
+        _CACHED_DEVICE = "mps"
+    else:
+        _CACHED_DEVICE = "cpu"
+    return _CACHED_DEVICE
 
 
 def get_embedding_model(
@@ -84,7 +118,8 @@ def get_embedding_model(
         ImportError: If sentence-transformers is not installed.
         RuntimeError: If model failed to load.
     """
-    if SentenceTransformer is None:
+    st_cls = _ensure_sentence_transformers()
+    if st_cls is None:
         raise ImportError(
             "The 'sentence-transformers' library is required but not installed. "
             "Please install it using 'pip install sentence-transformers'."
@@ -99,7 +134,7 @@ def get_embedding_model(
             model_name, resolved_device
         )
         try:
-            model = SentenceTransformer(model_name, device=resolved_device)
+            model = st_cls(model_name, device=resolved_device)
             _MODEL_CACHE[cache_key] = model
             logger.info("Successfully loaded and cached model '%s'.", model_name)
         except Exception as exc:
@@ -398,7 +433,8 @@ class ChromaVectorStore:
             in_memory: If True, uses ephemeral in-memory storage (useful for tests and volatile sessions).
             embedding_model: Optional SentenceTransformer instance used to generate embeddings.
         """
-        if chromadb is None:
+        cdb = _ensure_chromadb()
+        if cdb is None:
             raise ImportError(
                 "The 'chromadb' library is required but not installed. "
                 "Please install it using 'pip install chromadb'."
